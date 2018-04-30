@@ -731,7 +731,9 @@
     this.pig = pig;
 
     this.classNames = {
-      figure: pig.settings.classPrefix + '-figure',
+      figure: pig.settings.classPrefix + '-figure' +
+              ' filename-' + singleImageData.filename +
+              ' session-' + singleImageData.sessionId,
       thumbnail: pig.settings.classPrefix + '-thumbnail',
       loaded: pig.settings.classPrefix + '-loaded',
     };
@@ -779,6 +781,10 @@
           }
         }.bind(this);
 
+        this.fullImage.addEventListener("click", function(event) {
+          this.pig.settings.callback(event, this.filename, this.sessionId);
+        }, this);
+
         this.getElement().appendChild(this.thumbnail);
       }
 
@@ -794,6 +800,10 @@
             this.fullImage.className += ' ' + this.classNames.loaded;
           }
         }.bind(this);
+
+        this.fullImage.addEventListener("click", function(event) {
+          this.pig.settings.callback(event, this.filename, this.sessionId);
+        }, this);
 
         this.getElement().appendChild(this.fullImage);
       }
