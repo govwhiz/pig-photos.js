@@ -725,6 +725,7 @@
     // Instance information
     this.aspectRatio = singleImageData.aspectRatio;  // Aspect Ratio
     this.filename = singleImageData.filename;  // Filename
+    this.sessionId = singleImageData.sessionId; // Session
     this.index = index;  // The index in the list of images
 
     // The Pig instance
@@ -781,10 +782,6 @@
           }
         }.bind(this);
 
-        this.fullImage.addEventListener("click", function(event) {
-          this.pig.settings.callback(event, this.filename, this.sessionId);
-        }, this);
-
         this.getElement().appendChild(this.thumbnail);
       }
 
@@ -801,9 +798,9 @@
           }
         }.bind(this);
 
-        this.fullImage.addEventListener("click", function(event) {
-          this.pig.settings.callback(event, this.filename, this.sessionId);
-        }, this);
+        this.fullImage.addEventListener("click", function (event) {
+          this.pig.settings.click(event, this.filename, this.sessionId);
+        }.bind(this));
 
         this.getElement().appendChild(this.fullImage);
       }
