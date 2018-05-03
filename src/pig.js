@@ -725,16 +725,15 @@
     // Instance information
     this.aspectRatio = singleImageData.aspectRatio;  // Aspect Ratio
     this.filename = singleImageData.filename;  // Filename
-    this.sessionId = singleImageData.sessionId; // Session
+    this.sessionId = singleImageData.sessionId; // Session Id
+    this.submissionId = singleImageData.submissionId; // Submission Id
     this.index = index;  // The index in the list of images
 
     // The Pig instance
     this.pig = pig;
 
     this.classNames = {
-      figure: pig.settings.classPrefix + '-figure' +
-              ' filename-' + singleImageData.filename +
-              ' session-' + singleImageData.sessionId,
+      figure: pig.settings.classPrefix + '-figure',
       thumbnail: pig.settings.classPrefix + '-thumbnail',
       loaded: pig.settings.classPrefix + '-loaded',
     };
@@ -799,7 +798,7 @@
         }.bind(this);
 
         this.fullImage.addEventListener("click", function (event) {
-          this.pig.settings.click(event, this.filename, this.sessionId);
+          this.pig.settings.click(event, this.filename, this.submissionId);
         }.bind(this));
 
         this.getElement().appendChild(this.fullImage);
