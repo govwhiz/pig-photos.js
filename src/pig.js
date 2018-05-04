@@ -156,6 +156,33 @@
   }
 
   /**
+   * Load image with XMLHttpRequest
+   * then get base64 encoded data with FileReader
+   * and call success calback
+   * If xhr status is not 200 then call error calback
+  **/
+  function _loadImg(url, success, error) {
+    var
+      progressiveImage = this,
+      xhr              = new XMLHttpRequest();
+
+    xhr.onreadystatechange = function() {
+      if(xhr.readyState == 4 && xhr.status == 200) {
+        var reader = new FileReader();
+        reader.onloadend = function() {
+          success.call(progressiveImage, reader.result);
+        };
+        reader.readAsDataURL(xhr.response);
+      } else if(xhr.readyState == 4 && xhr.status !== 200) {
+        error.call(progressiveImage, xhr.status);
+      }
+    };
+    xhr.open('GET', url);
+    xhr.responseType = 'blob';
+    xhr.send();
+  }
+
+  /**
    * Creates an instance of the progressive image grid, inserting boilerplate
    * CSS and loading image data. Instantiating an instance of the Pig class
    * does not cause any images to appear however. After instantiating, call the
@@ -787,21 +814,38 @@
       // Show full image
       if (!this.fullImage) {
         this.fullImage = new Image();
-        this.fullImage.src = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastWindowWidth));
-        this.fullImage.onload = function() {
+        var imgSrc = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastWindowWidth));
 
-          // We have to make sure fullImage still exists, we may have already been
-          // deallocated if the user scrolls too fast.
-          if (this.fullImage) {
-            this.fullImage.className += ' ' + this.classNames.loaded;
-          }
-        }.bind(this);
+        _loadImg.call(this, imgSrc, successImgLoad, errorImgLoad);
 
         this.fullImage.addEventListener("click", function (event) {
           this.pig.settings.click(event, this.filename, this.submissionId);
         }.bind(this));
 
         this.getElement().appendChild(this.fullImage);
+
+
+        function successImgLoad(imgBase64Data) {
+          if(this.fullImage) {
+            this.fullImage.src = imgBase64Data;
+
+            if (this.fullImage) {
+              this.fullImage.className += ' ' + this.classNames.loaded;
+            }
+          }
+        }
+
+
+        function errorImgLoad(errorStatus) {
+          console.error(errorStatus);
+          this.pig.settings.error.call(this, errorStatus, renovateImg);
+        }
+
+
+        function renovateImg() {
+           var imgSrc = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastWindowWidth));
+           _loadImg.call(this, imgSrc, successImgLoad, errorImgLoad);
+        }
       }
     }.bind(this), 100);
   };
