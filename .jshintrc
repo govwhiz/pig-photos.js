@@ -2,5 +2,6 @@
 	"browser": true,
     "browserify": true,
 	"devel": true,
+  "validthis": true,
 	"predef": [ "Pangea" ]
 }

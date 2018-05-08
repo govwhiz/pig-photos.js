@@ -351,7 +351,7 @@
 
     // Our global reference for images in the grid.  Note that not all of these
     // images are necessarily in view or loaded.
-    this.images = this._parseImageData(imageData);
+    this.elements = this._parseImageData(imageData);
 
     // Inject our boilerplate CSS.
     _injectStyle(this.settings.containerId, this.settings.classPrefix, this.settings.transitionSpeed);
@@ -421,20 +421,35 @@
    *                                      instances that we created.
    */
   Pig.prototype._parseImageData = function(imageData) {
-    var progressiveImages = [];
+    var
+      progressiveElements = [],
+      titleIndex          = 0;
 
     imageData.forEach(function(image, index) {
       var progressiveImage = new ProgressiveImage(image, index, this);
-      progressiveImages.push(progressiveImage);
+      progressiveElements.push(progressiveImage);
+
+      if (this.imageData[index + 1] &&
+          image[this.pig.settings.groupKey] !== imageData[index + 1][this.pig.settings.groupKey]) {
+        var
+          title = {
+            sessionId:    image.sessionId, // Session Id
+            submissionId: image.submissionId // Submission Id
+          },
+          progressiveTitle = new ProgressiveTitle(title, titleIndex, this);
+          titleIndex++;
+
+        progressiveElements.push(progressiveTitle);        
+      }
     }.bind(this));
 
-    return progressiveImages;
+    return progressiveElements;
   };
 
   /**
    * This computes the layout of the entire grid, setting the height, width,
    * translateX, translateY, and transtion values for each ProgessiveImage in
-   * `this.images`. These styles are set on the ProgressiveImage.style property,
+   * `this.elements`. These styles are set on the ProgressiveImage.style property,
    * but are not set on the DOM.
    *
    * This separation of concerns (computing layout and DOM manipulation) is
@@ -454,6 +469,7 @@
     var row = [];           // The list of images in the current row.
     var translateX = 0;     // The current translateX value that we are at
     var translateY = 0;     // The current translateY value that we are at
+    var TITLE_HEIGHT = 100; // The group title height
     var rowAspectRatio = 0; // The aspect ratio of the row we are building
 
     // Compute the minimum aspect ratio that should be applied to the rows.
@@ -479,55 +495,79 @@
 
     // Loop through all our images, building them up into rows and computing
     // the working rowAspectRatio.
-    [].forEach.call(this.images, function(image, index) {
-      rowAspectRatio += parseFloat(image.aspectRatio);
-      row.push(image);
+    [].forEach.call(this.elements, function(el, index) {
+      row.push(el);
 
-      // When the rowAspectRatio exceeeds the minimum acceptable aspect ratio,
-      // or when we're out of images, we say that we have all the images we
-      // need for this row, and compute the style values for each of these
-      // images.
-      if (rowAspectRatio >= this.minAspectRatio || index + 1 === this.images.length) {
+      // ProgressiveTitle
+      if(el instanceof ProgressiveTitle) {
+        translateX = 0;
 
-        // Make sure that the last row also has a reasonable height
-        rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio);
-        
-        // Compute this row's height.
-        var totalDesiredWidthOfImages = wrapperWidth - this.settings.spaceBetweenImages * (row.length - 1);
-        var rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
-
-        // For each image in the row, compute the width, height, translateX,
-        // and translateY values, and set them (and the transition value we
-        // found above) on each image.
-        //
-        // NOTE: This does not manipulate the DOM, rather it just sets the
-        //       style values on the ProgressiveImage instance. The DOM nodes
-        //       will be updated in _doLayout.
-        row.forEach(function(img) {
-
-          var imageWidth = rowHeight * img.aspectRatio;
-
+        row.forEach(function(title) {
           // This is NOT DOM manipulation.
-          img.style = {
-            width: parseInt(imageWidth),
-            height: parseInt(rowHeight),
+          title.style = {
+            height:     TITLE_HEIGHT,
             translateX: translateX,
             translateY: translateY,
             transition: transition,
           };
-
-          // The next image is this.settings.spaceBetweenImages pixels to the
-          // right of this image.
-          translateX += imageWidth + this.settings.spaceBetweenImages;
-
         }.bind(this));
 
         // Reset our state variables for next row.
         row = [];
         rowAspectRatio = 0;
-        translateY += parseInt(rowHeight) + this.settings.spaceBetweenImages;
-        translateX = 0;
+        translateY += TITLE_HEIGHT + this.settings.spaceBetweenImages;
+
+      // ProgressiveImage
+      } else if (el instanceof ProgressiveImage) {
+        rowAspectRatio += parseFloat(el.aspectRatio);
+
+        // When the rowAspectRatio exceeeds the minimum acceptable aspect ratio,
+        // or when we're out of images, we say that we have all the images we
+        // need for this row, and compute the style values for each of these
+        // images.
+        if (rowAspectRatio >= this.minAspectRatio || index + 1 === this.elements.length) {
+
+          // Make sure that the last row also has a reasonable height
+          rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio);
+
+          // Compute this row's height.
+          var totalDesiredWidthOfImages = wrapperWidth - this.settings.spaceBetweenImages * (row.length - 1);
+          var rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
+
+          // For each image in the row, compute the width, height, translateX,
+          // and translateY values, and set them (and the transition value we
+          // found above) on each image.
+          //
+          // NOTE: This does not manipulate the DOM, rather it just sets the
+          //       style values on the ProgressiveImage instance. The DOM nodes
+          //       will be updated in _doLayout.
+          row.forEach(function(img) {
+
+            var imageWidth = rowHeight * img.aspectRatio;
+
+            // This is NOT DOM manipulation.
+            img.style = {
+              width: parseInt(imageWidth),
+              height: parseInt(rowHeight),
+              translateX: translateX,
+              translateY: translateY,
+              transition: transition,
+            };
+
+            // The next image is this.settings.spaceBetweenImages pixels to the
+            // right of this image.
+            translateX += imageWidth + this.settings.spaceBetweenImages;
+
+          }.bind(this));
+
+          // Reset our state variables for next row.
+          row = [];
+          rowAspectRatio = 0;
+          translateY += parseInt(rowHeight) + this.settings.spaceBetweenImages;
+          translateX = 0;
+        }
       }
+
     }.bind(this));
 
     // No space below the last image
@@ -626,15 +666,19 @@
 
     // Here, we loop over every image, determine if it is inside our buffers or
     // no, and either insert it or remove it appropriately.
-    this.images.forEach(function(image) {
+    this.elements.forEach(function(el) {
+      if (containerOffset + el.style.translateY <= this.latestYOffset &&
+          containerOffset + el.style.translateY + el.style.height >= this.latestYOffset) {
+        window.name = el[this.pig.settings.groupKey];
+      }
 
-      if (image.style.translateY + image.style.height < minTranslateYPlusHeight ||
-            image.style.translateY > maxTranslateY) {
-        // Hide Image
-        image.hide();
+      if (el.style.translateY + el.style.height < minTranslateYPlusHeight ||
+          el.style.translateY > maxTranslateY) {
+        // Hide Element
+        el.hide();
       } else {
-        // Load Image
-        image.load();
+        // Load Element
+        el.load();
       }
     }.bind(this));
   };
@@ -711,6 +755,121 @@
     window.removeEventListener('scroll', this.onScroll);
     optimizedResize.disable();
     return this;
+  };
+
+  /**
+   * This class manages a single images group
+   *
+   *   <figure class="pig-figure" style="transform: ...">
+   *     <h1>[Grouped value]</h1>
+   *   </figure>
+  **/
+  function ProgressiveTitle(singleTitleData, index, pig) {
+
+    // Global State
+    this.existsOnPage = false; // True if the element exists on the page.
+
+    // Instance information
+    this.sessionId = singleTitleData.sessionId; // Session Id
+    this.submissionId = singleTitleData.submissionId; // Submission Id
+    this.index = index;  // The index in the list of titles
+
+    // The Pig instance
+    this.pig = pig;
+
+    this.classNames = {
+      figure: pig.settings.classPrefix + '-figure'
+    };
+
+    return this;
+  }
+
+  /**
+   * Load the title element associated with this ProgressiveTitle into the DOM.
+   *
+   * This function will append the figure into the DOM, create and insert the grouped title value.
+   */
+  ProgressiveTitle.prototype.load = function() {
+    // Create a new title element, and insert it into the DOM. It doesn't
+    // matter the order of the figure elements, because all positioning
+    // is done using transforms.
+    this.existsOnPage = true;
+    this._updateStyles();
+    this.pig.container.appendChild(this.getElement());
+
+    // We run the rest of the function in a 100ms setTimeout so that if the
+    // user is scrolling down the page very fast and hide() is called within
+    // 100ms of load(), the hide() function will set this.existsOnPage to false
+    // and we can exit.
+    setTimeout(function() {
+
+      // The image was hidden very quickly after being loaded, so don't bother
+      // loading it at all.
+      if (!this.existsOnPage) {
+        return;
+      }
+
+      // Show title
+      if (!this.title) {
+        var titleValue = document.createTextNode(this[this.pig.settings.groupKey]);
+
+        this.title =document.createElement("H1");
+        this.title.appendChild(titleValue);
+
+        this.getElement().appendChild(this.title);
+      }
+    }.bind(this), 100);
+  };
+
+  /**
+   * Removes the figure from the DOM, removes the title, and
+   * deletes the this.title propertie off of the
+   * ProgressiveTitle object.
+   */
+  ProgressiveTitle.prototype.hide = function() {
+    // Remove the title from the element, so that if a user is scrolling super
+    // fast, we won't try to load every image we scroll past.
+    if (this.getElement()) {
+      if (this.title) {
+        this.getElement().removeChild(this.title);
+        delete this.title;
+      }
+    }
+
+    // Remove the title from the DOM.
+    if (this.existsOnPage) {
+      this.pig.container.removeChild(this.getElement());
+    }
+
+    this.existsOnPage = false;
+
+  };
+
+  /**
+   * Get the DOM element associated with this ProgressiveTitle. We default to
+   * using this.element, and we create it if it doesn't exist.
+   *
+   * @returns {HTMLElement} The DOM element associated with this instance.
+   */
+  ProgressiveTitle.prototype.getElement = function() {
+    if (!this.element) {
+      this.element = document.createElement(this.pig.settings.figureTagName);
+      this.element.className = this.classNames.figure;
+      this._updateStyles();
+    }
+
+    return this.element;
+  };
+
+  /**
+   * Updates the style attribute to reflect this style property on this object.
+   */
+  ProgressiveTitle.prototype._updateStyles = function() {
+    this.getElement().style.transition = this.style.transition;
+    this.getElement().style.height = this.style.height + 'px';
+    this.getElement().style.transform = (
+      'translate3d(' + this.style.translateX + 'px,' +
+        this.style.translateY + 'px, 0)');
   };
 
   /**
@@ -823,31 +982,31 @@
         }.bind(this));
 
         this.getElement().appendChild(this.fullImage);
-
-
-        function successImgLoad(imgBase64Data) {
-          if(this.fullImage) {
-            this.fullImage.src = imgBase64Data;
-
-            if (this.fullImage) {
-              this.fullImage.className += ' ' + this.classNames.loaded;
-            }
-          }
-        }
-
-
-        function errorImgLoad(errorStatus) {
-          console.error(errorStatus);
-          this.pig.settings.error.call(this, errorStatus, renovateImg);
-        }
-
-
-        function renovateImg() {
-           var imgSrc = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastWindowWidth));
-           _loadImg.call(this, imgSrc, successImgLoad, errorImgLoad);
-        }
       }
     }.bind(this), 100);
+
+
+    function successImgLoad(imgBase64Data) {
+      if(this.fullImage) {
+        this.fullImage.src = imgBase64Data;
+
+        if (this.fullImage) {
+          this.fullImage.className += ' ' + this.classNames.loaded;
+        }
+      }
+    }
+
+
+    function errorImgLoad(errorStatus) {
+      console.error(errorStatus);
+      this.pig.settings.error.call(this, errorStatus, renovateImg);
+    }
+
+
+    function renovateImg() {
+       var imgSrc = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastWindowWidth));
+       _loadImg.call(this, imgSrc, successImgLoad, errorImgLoad);
+    }
   };
 
   /**
