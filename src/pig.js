@@ -439,27 +439,35 @@
    * @returns {Array[ProgressiveImage]} - An array of ProgressiveImage
    *                                      instances that we created.
    */
-  Pig.prototype._parseImageData = function(imageData) {
-    var
-      progressiveElements = [],
-      titleIndex          = 0;
+  Pig.prototype._parseImageData = function (imageData) {
+    var progressiveElements = [],
+        titleIndex = 0;
 
-    imageData.forEach(function(image, index) {
+    imageData.forEach(function (image, index) {
+      if(index === 0) {
+        createTitleData.call(this, image);
+      }
+
       var progressiveImage = new ProgressiveImage(image, index, this);
       progressiveElements.push(progressiveImage);
 
-      if (imageData[index + 1] &&
-          image[this.settings.groupKey] !== imageData[index + 1][this.settings.groupKey]) {
-        var
-          title = {
-            sessionId:    image.sessionId, // Session Id
-            submissionId: image.submissionId // Submission Id
-          },
-          progressiveTitle = new ProgressiveTitle(title, titleIndex, this);
-          titleIndex++;
-
-        progressiveElements.push(progressiveTitle);        
+      if (imageData[index + 1] && image[this.settings.groupKey] !== imageData[index + 1][this.settings.groupKey]) {
+        createTitleData.call(this, imageData[index + 1]);
       }
+
+
+      function createTitleData(titleData) {
+        var title = {
+          sessionId:    titleData.sessionId, // Session Id
+          submissionId: titleData.submissionId // Submission Id
+        },
+        progressiveTitle = new ProgressiveTitle(title, titleIndex, this);
+
+        titleIndex++;
+
+        progressiveElements.push(progressiveTitle);
+      }
+
     }.bind(this));
 
     return progressiveElements;
