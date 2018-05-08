@@ -793,6 +793,7 @@
    *   </figure>
   **/
   function ProgressiveTitle(singleTitleData, index, pig) {
+    this.type = 'title';
 
     // Global State
     this.existsOnPage = false; // True if the element exists on the page.
@@ -933,6 +934,7 @@
    *                                                  image.
    */
   function ProgressiveImage(singleImageData, index, pig) {
+    this.type = 'image';
 
     // Global State
     this.existsOnPage = false; // True if the element exists on the page.
