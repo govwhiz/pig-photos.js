@@ -798,7 +798,7 @@
     this.pig = pig;
 
     this.classNames = {
-      figure: pig.settings.classPrefix + '-figure' +
+      figure: pig.settings.classPrefix + '-figure ' +
               pig.settings.classPrefix + '-figure-title'
     };
 
