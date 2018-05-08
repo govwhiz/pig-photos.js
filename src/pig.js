@@ -70,7 +70,7 @@
    *                               should be prepended to classnames.
    * @param {string} containerId - ID of the container for the images.
    */
-  function _injectStyle(containerId, classPrefix, transitionSpeed) {
+  function _injectStyle(containerId, classPrefix, transitionSpeed, groupTitleHeight) {
 
     var css = (
       'body {' + 
@@ -86,6 +86,18 @@
       '  position: absolute;' +
       '  top: 0;' +
       '  margin: 0;' +
+      '}' +
+      '.' + classPrefix + '-figure-title {' +
+      '  background-color: transparent;' +
+      '}' +
+      '.' + classPrefix + '-figure h1 {' +
+      '  font-size: 21px;' +
+      '  margin: 0 15px;' +
+      '  line-height: ' + groupTitleHeight + 'px;' +
+      '  color: rgba(0, 0, 0, 0.9);' +
+      '  text-transform: uppercase;' +
+      '  font-family: keepcalm, "Helvetica Neue", Helvetica, Arial, sans-serif;' +
+      '  background-color: transparent;' +
       '}' +
       '.' + classPrefix + '-figure img {' +
       '  left: 0;' +
@@ -243,6 +255,13 @@
 
       /**
        * Type: Number
+       * Default: 100
+       * Description: Height in pixel of grouping title
+      **/
+      groupTitleHeight: 100,
+
+      /**
+       * Type: Number
        * Default: 8
        * Description: Size in pixels of the gap between images in the grid.
        */
@@ -354,7 +373,7 @@
     this.elements = this._parseImageData(imageData);
 
     // Inject our boilerplate CSS.
-    _injectStyle(this.settings.containerId, this.settings.classPrefix, this.settings.transitionSpeed);
+    _injectStyle(this.settings.containerId, this.settings.classPrefix, this.settings.transitionSpeed, this.settings.groupTitleHeight);
 
     // Allows for chaining with `enable()`.
     return this;
@@ -429,8 +448,8 @@
       var progressiveImage = new ProgressiveImage(image, index, this);
       progressiveElements.push(progressiveImage);
 
-      if (this.imageData[index + 1] &&
-          image[this.pig.settings.groupKey] !== imageData[index + 1][this.pig.settings.groupKey]) {
+      if (imageData[index + 1] &&
+          image[this.settings.groupKey] !== imageData[index + 1][this.settings.groupKey]) {
         var
           title = {
             sessionId:    image.sessionId, // Session Id
@@ -469,7 +488,6 @@
     var row = [];           // The list of images in the current row.
     var translateX = 0;     // The current translateX value that we are at
     var translateY = 0;     // The current translateY value that we are at
-    var TITLE_HEIGHT = 100; // The group title height
     var rowAspectRatio = 0; // The aspect ratio of the row we are building
 
     // Compute the minimum aspect ratio that should be applied to the rows.
@@ -505,7 +523,7 @@
         row.forEach(function(title) {
           // This is NOT DOM manipulation.
           title.style = {
-            height:     TITLE_HEIGHT,
+            height:     this.settings.groupTitleHeight,
             translateX: translateX,
             translateY: translateY,
             transition: transition,
@@ -515,7 +533,7 @@
         // Reset our state variables for next row.
         row = [];
         rowAspectRatio = 0;
-        translateY += TITLE_HEIGHT + this.settings.spaceBetweenImages;
+        translateY += this.settings.groupTitleHeight + this.settings.spaceBetweenImages;
 
       // ProgressiveImage
       } else if (el instanceof ProgressiveImage) {
@@ -525,7 +543,9 @@
         // or when we're out of images, we say that we have all the images we
         // need for this row, and compute the style values for each of these
         // images.
-        if (rowAspectRatio >= this.minAspectRatio || index + 1 === this.elements.length) {
+        if (rowAspectRatio >= this.minAspectRatio ||
+            index + 1 === this.elements.length ||
+            (this.elements[index + 1] && this.elements[index + 1] instanceof ProgressiveTitle)) {
 
           // Make sure that the last row also has a reasonable height
           rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio);
@@ -669,7 +689,7 @@
     this.elements.forEach(function(el) {
       if (containerOffset + el.style.translateY <= this.latestYOffset &&
           containerOffset + el.style.translateY + el.style.height >= this.latestYOffset) {
-        window.name = el[this.pig.settings.groupKey];
+        window.name = el[this.settings.groupKey];
       }
 
       if (el.style.translateY + el.style.height < minTranslateYPlusHeight ||
@@ -778,7 +798,8 @@
     this.pig = pig;
 
     this.classNames = {
-      figure: pig.settings.classPrefix + '-figure'
+      figure: pig.settings.classPrefix + '-figure' +
+              pig.settings.classPrefix + '-figure-title'
     };
 
     return this;
