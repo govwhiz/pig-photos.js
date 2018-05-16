@@ -362,12 +362,6 @@
     // We extend the default settings with the provided overrides.
     _extend(this.settings, options || {});
 
-    // Find the container to load images into, if it exists.
-    this.container = document.getElementById(this.settings.containerId);
-    if (!this.container) {
-      console.error('Could not find element with ID ' + this.settings.containerId);
-    }
-
     // Our global reference for images in the grid.  Note that not all of these
     // images are necessarily in view or loaded.
     this.elements = this._parseImageData(imageData);
@@ -607,6 +601,7 @@
    * get container total height
   **/
   Pig.prototype._setTotalHeight = function() {
+    var wrapperWidth = document.getElementById('photos').clientWidth;
     // State
     var row = [];           // The list of images in the current row.
     var translateX = 0;     // The current translateX value that we are at
@@ -815,6 +810,13 @@
    * @returns {object} The Pig instance, for easy chaining with the constructor.
    */
   Pig.prototype.enable = function() {
+    // Find the container to load images into, if it exists.
+    this.container = document.getElementById(this.settings.containerId);
+    if (!this.container) {
+      console.error('Could not find element with ID ' + this.settings.containerId);
+      return;
+    }
+
     this.onScroll = this._getOnScroll();
     window.addEventListener('scroll', this.onScroll);
 
