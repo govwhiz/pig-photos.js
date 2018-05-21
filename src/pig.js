@@ -88,13 +88,14 @@
       '  margin: 0;' +
       '}' +
       '.' + classPrefix + '-figure-title {' +
-      '  background-color: transparent;' +
+      '  background-color: white;' +
+      '  width: 100%;' +
       '}' +
       '.' + classPrefix + '-figure h1 {' +
       '  font-size: 21px;' +
       '  margin: 0 15px;' +
       '  line-height: ' + groupTitleHeight + 'px;' +
-      '  color: rgba(0, 0, 0, 0.9);' +
+      '  color: #4CAF50;' +
       '  text-transform: uppercase;' +
       '  font-family: keepcalm, "Helvetica Neue", Helvetica, Arial, sans-serif;' +
       '  background-color: transparent;' +
@@ -488,9 +489,11 @@
 
     // State
     var row = [];           // The list of images in the current row.
-    var translateX = 0;     // The current translateX value that we are at
+    var translateX = this.settings.spaceBetweenImages;     // The current translateX value that we are at
     var translateY = 0;     // The current translateY value that we are at
     var rowAspectRatio = 0; // The aspect ratio of the row we are building
+    var lastRowLength = null;
+    var lastRowAspectRatio = null;
 
     // Compute the minimum aspect ratio that should be applied to the rows.
     this._recomputeMinAspectRatio();
@@ -535,6 +538,7 @@
         // Reset our state variables for next row.
         row = [];
         rowAspectRatio = 0;
+        translateX = this.settings.spaceBetweenImages;
         translateY += this.settings.groupTitleHeight + this.settings.spaceBetweenImages;
 
       // ProgressiveImage
@@ -549,12 +553,24 @@
             index + 1 === this.elements.length ||
             (this.elements[index + 1] && this.elements[index + 1] instanceof ProgressiveTitle)) {
 
-          // Make sure that the last row also has a reasonable height
-          rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio);
+
+          if(rowAspectRatio >= this.minAspectRatio) {
+            // Make sure that the last row also has a reasonable height
+            rowAspectRatio = Math.max(rowAspectRatio, this.minAspectRatio);
+
+            lastRowLength = row.length;
+            lastRowAspectRatio = rowAspectRatio;
+          }
+
+          if(!lastRowLength || !lastRowAspectRatio) {
+            rowAspectRatio = this.minAspectRatio;
+            lastRowLength = row.length;
+            lastRowAspectRatio = rowAspectRatio;
+          }
 
           // Compute this row's height.
-          var totalDesiredWidthOfImages = wrapperWidth - this.settings.spaceBetweenImages * (row.length - 1);
-          var rowHeight = totalDesiredWidthOfImages / rowAspectRatio;
+          var totalDesiredWidthOfImages = wrapperWidth - this.settings.spaceBetweenImages * (lastRowLength + 1);
+          var rowHeight = totalDesiredWidthOfImages / lastRowAspectRatio;
 
           // For each image in the row, compute the width, height, translateX,
           // and translateY values, and set them (and the transition value we
@@ -586,7 +602,7 @@
           row = [];
           rowAspectRatio = 0;
           translateY += parseInt(rowHeight) + this.settings.spaceBetweenImages;
-          translateX = 0;
+          translateX = this.settings.spaceBetweenImages;
         }
       }
 
