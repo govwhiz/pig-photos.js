@@ -730,28 +730,35 @@
       }
 
       // Show thumbnail
-      if (!this.thumbnail) {
-        this.thumbnail = new Image();
-        this.thumbnail.src = this.pig.settings.urlForSize(this.filename, this.pig.settings.thumbnailSize);
-        this.thumbnail.className = this.classNames.thumbnail;
-        this.thumbnail.onload = function() {
+      // if (!this.thumbnail) {
+      //   this.thumbnail = new Image();
+      //   this.thumbnail.src = this.pig.settings.urlForSize(this.filename, this.pig.settings.thumbnailSize);
+      //   this.thumbnail.className = this.classNames.thumbnail;
+      //   this.thumbnail.onload = function() {
 
-          // We have to make sure thumbnail still exists, we may have already been
-          // deallocated if the user scrolls too fast.
-          if (this.thumbnail) {
-            this.thumbnail.className += ' ' + this.classNames.loaded;
-          }
-        }.bind(this);
+      //     // We have to make sure thumbnail still exists, we may have already been
+      //     // deallocated if the user scrolls too fast.
+      //     if (this.thumbnail) {
+      //       this.thumbnail.className += ' ' + this.classNames.loaded;
+      //     }
+      //   }.bind(this);
 
-        this.getElement().appendChild(this.thumbnail);
-      }
+      //   this.getElement().appendChild(this.thumbnail);
+      // }
 
       // Show full image
       if (!this.fullImage) {
         this.fullImage = new Image();
-        var imgSrc = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastScrollElementWidth));
+        this.fullImage.src = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastScrollElementWidth));
 
-        _loadImg.call(this, imgSrc, successImgLoad, errorImgLoad);
+        this.fullImage.onload = function() {
+          if (this.fullImage) {
+            this.fullImage.className += ' ' + this.classNames.loaded;
+          }
+        }.bind(this);
+        // var imgSrc = this.pig.settings.urlForSize(this.filename, this.pig.settings.getImageSize(this.pig.lastScrollElementWidth));
+
+        // _loadImg.call(this, imgSrc, successImgLoad, errorImgLoad);
 
         this.fullImage.addEventListener("click", function (event) {
           this.pig.settings.click(event, this.filename, this.submissionId);
