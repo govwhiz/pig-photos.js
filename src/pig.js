@@ -575,6 +575,66 @@
     return this;
   };
 
+
+  Pig.prototype.updatePhotos = function(imageData) {
+    var addElements = this._parseImageData(imageData);
+    var submissionId = addElements[0].submissionId;
+
+    var pastIndex = null;
+    var pastLength = 0;
+
+    this.elements.forEach(function (el, index) {
+      if(el.submissionId === submissionId) {
+        pastLength++;
+
+        if(pastIndex === null) {
+          pastIndex = index;
+        }
+
+        // Hide Element
+        el.hide();
+      }
+    });
+
+    if(pastIndex === null) {
+      pastIndex = 0;
+    }
+
+    Array.prototype.splice.apply(this.elements, [pastIndex, pastLength].concat(addElements));
+
+    this._computeLayout();
+    this._doLayout();
+  };
+
+
+  Pig.prototype.deletePhotos = function(submissionId) {
+    var deleteIndex = null;
+    var deletedLength = 0;
+
+    this.elements.forEach(function (el, index) {
+      if(el.submissionId === submissionId) {
+        deletedLength++;
+
+        if(deleteIndex === null) {
+          deleteIndex = index;
+        }
+
+        // Hide Element
+        el.hide();
+      }
+    });
+
+    if(deleteIndex === null) {
+      deleteIndex = 0;
+    }
+
+    this.elements.splice(deleteIndex, deletedLength)
+
+    this._computeLayout();
+    this._doLayout();
+  };
+
+
   /**
    * This class manages a single images group
    *
