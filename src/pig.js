@@ -276,8 +276,8 @@
 
       function createTitleData(titleData) {
         var title = {
-          sessionId:    titleData.sessionId, // Session Id
-          submissionId: titleData.submissionId // Submission Id
+          submissionId: titleData.submissionId, // Submission Id
+          submissionPk: titleData.submissionPk  // Submission Pk
         },
         progressiveTitle = new ProgressiveTitle(title, titleIndex, this);
 
@@ -628,7 +628,7 @@
       deleteIndex = 0;
     }
 
-    this.elements.splice(deleteIndex, deletedLength)
+    this.elements.splice(deleteIndex, deletedLength);
 
     this._computeLayout();
     this._doLayout();
@@ -649,8 +649,8 @@
     this.existsOnPage = false; // True if the element exists on the page.
 
     // Instance information
-    this.sessionId = singleTitleData.sessionId; // Session Id
     this.submissionId = singleTitleData.submissionId; // Submission Id
+    this.submissionPk = singleTitleData.submissionPk; // Submission Pk
     this.index = index;  // The index in the list of titles
 
     // The Pig instance
@@ -762,8 +762,8 @@
     // Instance information
     this.aspectRatio = singleImageData.aspectRatio;  // Aspect Ratio
     this.filename = singleImageData.filename;  // Filename
-    this.sessionId = singleImageData.sessionId; // Session Id
     this.submissionId = singleImageData.submissionId; // Submission Id
+    this.submissionPk = singleImageData.submissionPk; // Submission Pk
     this.index = index;  // The index in the list of images
 
     // The Pig instance
