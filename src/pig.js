@@ -505,7 +505,7 @@
     this.elements.forEach(function(el) {
       if (el.style.translateY <= this.latestYOffset &&
           el.style.translateY + el.style.height >= this.latestYOffset) {
-        window.name = el[this.settings.groupKey];
+        window.name = el.submissionId;
       }
 
       if (el.style.translateY + el.style.height < minTranslateY ||
