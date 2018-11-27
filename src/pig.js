@@ -602,7 +602,6 @@
       // past element inside
       if(nextElement && submissionPk < el.submissionPk &&
          submissionPk > nextElement.submissionPk) {
-        pastLength++;
 
         if(pastIndex === null) {
           pastIndex = index + 1;
@@ -611,7 +610,9 @@
     });
 
     if(pastIndex === null) {
-      pastIndex = (submissionPk - this.elements[0].submissionPk) > 0 ? 0 : this.elements.length;
+      pastIndex = this.elements.length > 0 && (submissionPk - this.elements[0].submissionPk) > 0
+        ? 0
+        : this.elements.length;
     }
 
     Array.prototype.splice.apply(this.elements, [pastIndex, pastLength].concat(addElements));
