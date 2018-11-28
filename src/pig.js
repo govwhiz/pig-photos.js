@@ -570,7 +570,10 @@
 
 
   Pig.prototype.disable = function() {
-    this.scrollElement.removeEventListener('scroll', this.onScroll);
+    if(this.scrollElement) {
+      this.scrollElement.removeEventListener('scroll', this.onScroll);
+    }
+
     optimizedResize.disable();
     return this;
   };
